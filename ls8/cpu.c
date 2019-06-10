@@ -74,16 +74,47 @@ void cpu_run(struct cpu *cpu)
 {
   int running = 1; // True until we get a HLT instruction
 
-  cpu_ram_read(cpu, 0);
+  unsigned char ir;
 
   while (running)
   {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
+    ir = cpu->ram[cpu->pc];
+    // ir = cpu->ram[5];
+    unsigned char operandA;
+    unsigned char operandB;
+
+    if (ir > 128)
+    {
+
+      operandA = cpu->ram[cpu->pc + 1];
+      operandB = cpu->ram[cpu->pc + 2];
+    }
+    else if (ir > 64 && ir < 64)
+    {
+      operandA = cpu->ram[cpu->pc + 1];
+    }
 
     // 2. Figure out how many operands this next instruction requires
     // 3. Get the appropriate value(s) of the operands following this instruction
     // 4. switch() over it to decide on a course of action.
+    switch (ir)
+    {
+    case LDI:
+      cpu->registers[operandA] = operandB;
+      cpu->pc += 3;
+      break;
+    case PRN:
+      printf("%d\n", cpu->registers[operandA]);
+      cpu->pc += 2;
+      break;
+    case HLT:
+      running = 0;
+      break;
+    default:
+      printf("Unknown instructrion %02 at address %02\n", ir, cpu->pc);
+    }
     // 5. Do whatever the instruction should do according to the spec.
     // 6. Move the PC to the next instruction.
   }
@@ -94,15 +125,13 @@ void cpu_run(struct cpu *cpu)
  */
 void cpu_init(struct cpu *cpu)
 {
-  cpu = malloc(sizeof(cpu));
+  // cpu = malloc(sizeof(cpu));
   // TODO: Initialize the PC and other special registers
   cpu->pc = 0;
-  cpu->registers = malloc(sizeof(unsigned char) * 8);
 
   // set each index in registers to 0
   memset(cpu->registers, 0, 8 * sizeof(unsigned char));
 
-  cpu->ram = malloc(sizeof(unsigned char) * 256);
   // set each position in ram to 0
   memset(cpu->ram, 0, 256 * sizeof(unsigned char));
 }
