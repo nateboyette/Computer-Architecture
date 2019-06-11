@@ -48,12 +48,18 @@ void cpu_load(struct cpu *cpu, char *filename)
  * ALU
  */
 void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB)
+
 {
+
   switch (op)
   {
   case ALU_MUL:
-    // TODO
+    cpu->registers[0] = cpu->registers[regA] * cpu->registers[regB];
+    printf("WORKING\n");
     break;
+  default:
+    printf("Unknown instructrion %02 at address %02\n", op, cpu->pc);
+    exit(1);
 
     // TODO: implement more ALU ops
   }
@@ -125,6 +131,10 @@ void cpu_run(struct cpu *cpu)
       break;
     case HLT:
       running = 0;
+      break;
+    case MUL:
+      alu(cpu, ir, operandA, operandB);
+      cpu->pc += 3;
       break;
     default:
       printf("Unknown instructrion %02 at address %02\n", ir, cpu->pc);
