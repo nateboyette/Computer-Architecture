@@ -96,8 +96,16 @@ void cpu_run(struct cpu *cpu)
 
   unsigned char ir;
 
+  cpu->registers[SP] = 243;
+
+  // void handle_LDI()
+  // {
+  //   00
+  // }
+
   while (running)
   {
+
     // TODO
     // 1. Get the value of the current instruction (in address PC).
     ir = cpu->ram[cpu->pc];
@@ -105,17 +113,18 @@ void cpu_run(struct cpu *cpu)
     unsigned char operandA;
     unsigned char operandB;
 
-    if (ir > 128)
+    if (ir >> 6 == 2)
     {
 
       operandA = cpu->ram[cpu->pc + 1];
       operandB = cpu->ram[cpu->pc + 2];
     }
-    else if (ir > 64 && ir < 64)
+    else if (ir >> 6 == 1)
     {
       operandA = cpu->ram[cpu->pc + 1];
     }
 
+        // printf("TRACE: %02X: %02X %02X %02X\n", pc, ir, cpu->ram[pc + 1], cpu->ram[pc + 2]);
     // 2. Figure out how many operands this next instruction requires
     // 3. Get the appropriate value(s) of the operands following this instruction
     // 4. switch() over it to decide on a course of action.
@@ -136,6 +145,21 @@ void cpu_run(struct cpu *cpu)
       alu(cpu, ir, operandA, operandB);
       cpu->pc += 3;
       break;
+    case PUSH:
+
+      cpu->registers[SP]--;
+
+      cpu->ram[cpu->registers[SP]] = cpu->registers[operandA];
+      cpu->pc += 2;
+      break;
+
+    case POP:
+
+      cpu->registers[operandA] = cpu->ram[cpu->registers[SP]];
+
+      cpu->registers[SP]++;
+      cpu->pc += 2;
+      break;
     default:
       printf("Unknown instructrion %02 at address %02\n", ir, cpu->pc);
       exit(1);
@@ -150,7 +174,7 @@ void cpu_run(struct cpu *cpu)
  */
 void cpu_init(struct cpu *cpu)
 {
-  // cpu = malloc(sizeof(cpu));
+
   // TODO: Initialize the PC and other special registers
   cpu->pc = 0;
 
