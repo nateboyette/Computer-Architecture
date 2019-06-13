@@ -55,7 +55,10 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
   {
   case ALU_MUL:
     cpu->registers[0] = cpu->registers[regA] * cpu->registers[regB];
-    printf("WORKING\n");
+
+    break;
+  case ALU_ADD:
+    cpu->registers[0] = cpu->registers[regA] + cpu->registers[regB];
     break;
   default:
     printf("Unknown instructrion %02 at address %02\n", op, cpu->pc);
@@ -103,6 +106,8 @@ void cpu_run(struct cpu *cpu)
   //   00
   // }
 
+  int retaddr;
+
   while (running)
   {
 
@@ -124,7 +129,8 @@ void cpu_run(struct cpu *cpu)
       operandA = cpu->ram[cpu->pc + 1];
     }
 
-        // printf("TRACE: %02X: %02X %02X %02X\n", pc, ir, cpu->ram[pc + 1], cpu->ram[pc + 2]);
+    // printf("TRACE: %02X: %02X %02X %02X\n", cpu->pc, ir, cpu->ram[cpu->pc + 1], cpu->ram[cpu->pc + 2]);
+
     // 2. Figure out how many operands this next instruction requires
     // 3. Get the appropriate value(s) of the operands following this instruction
     // 4. switch() over it to decide on a course of action.
@@ -145,6 +151,10 @@ void cpu_run(struct cpu *cpu)
       alu(cpu, ir, operandA, operandB);
       cpu->pc += 3;
       break;
+    case ADD:
+      alu(cpu, ir, operandA, operandB);
+      cpu->pc += 3;
+      break;
     case PUSH:
 
       cpu->registers[SP]--;
@@ -156,9 +166,28 @@ void cpu_run(struct cpu *cpu)
     case POP:
 
       cpu->registers[operandA] = cpu->ram[cpu->registers[SP]];
-
       cpu->registers[SP]++;
       cpu->pc += 2;
+      break;
+    case CALL:
+      retaddr = cpu->pc + 2;
+      cpu->registers[SP]--;
+
+      cpu->ram[cpu->registers[SP]] = retaddr;
+
+      // set pc to the subroutine address stored in
+      // registers
+      cpu->pc = cpu->registers[operandA];
+
+      break;
+
+    case RET:
+
+      retaddr = cpu->ram[cpu->registers[SP]];
+      cpu->registers[SP]++;
+
+      cpu->pc = retaddr;
+
       break;
     default:
       printf("Unknown instructrion %02 at address %02\n", ir, cpu->pc);
